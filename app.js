@@ -140,10 +140,10 @@ class App{
                         const guard = guardGltf.scene;
                         
                         // Position guard near entrance (adjust values as needed)
-                        guard.position.set( 5, 0, -3 );
+                        guard.position.set( 6, 0.5, -4 );
                         
                         // Scale down if needed (GLB models often import too large)
-                        guard.scale.set( 0.5, 0.5, 0.5 );
+                        guard.scale.set( 0.1, 0.1, 0.1 );
                         
                         // Rotate to face correct direction
                         guard.rotation.y = Math.PI; // 180 degrees
