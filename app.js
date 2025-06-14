@@ -1,4 +1,3 @@
-
 import * as THREE from './libs/three/three.module.js';
 import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';
 import { DRACOLoader } from './libs/three/jsm/DRACOLoader.js';
@@ -103,7 +102,6 @@ class App{
 		loader.load(
 			'college.glb',
 			function ( gltf ) {
-
                 const college = gltf.scene.children[0];
 				self.scene.add( college );
 				
@@ -132,23 +130,36 @@ class App{
                 obj.position.copy(pos);
                 college.add( obj );
                 
-                self.loadingBar.visible = false;
-			
-                self.setupXR();
- 		const guardLoader = new GLTFLoader();
-                guardLoader.setDRACOLoader( dracoLoader ); // Reuse Draco loader
+                // Load guard model after college is ready
+                const guardLoader = new GLTFLoader();
+                guardLoader.setDRACOLoader( dracoLoader ); // Reuse same Draco loader
                 
                 guardLoader.load(
                     './models/guard.glb',
                     function( guardGltf ) {
                         const guard = guardGltf.scene;
-                        // Position guard near entrance (adjust as needed)
-                        guard.position.set( 5, 0, -3 );
-                        guard.scale.set( 0.5, 0.5, 0.5 );
-                        self.scene.add( guard );
                         
+                        // Position guard near entrance (adjust values as needed)
+                        guard.position.set( 5, 0, -3 );
+                        
+                        // Scale down if needed (GLB models often import too large)
+                        guard.scale.set( 0.5, 0.5, 0.5 );
+                        
+                        // Rotate to face correct direction
+                        guard.rotation.y = Math.PI; // 180 degrees
+                        
+                        self.scene.add( guard );
                         console.log('Guard model loaded successfully');
-            	},
+                    },
+                    undefined,
+                    function( error ) {
+                        console.error( 'Error loading guard model', error );
+                    }
+                );
+                
+                self.loadingBar.visible = false;
+                self.setupXR();
+			},
 			function ( xhr ) {
 				self.loadingBar.progress = (xhr.loaded / xhr.total);
 			},
@@ -168,15 +179,11 @@ class App{
         const timeoutId = setTimeout( connectionTimeout, 2000 );
         
         function onSelectStart( event ) {
-        
             this.userData.selectPressed = true;
-        
         }
 
         function onSelectEnd( event ) {
-        
             this.userData.selectPressed = false;
-        
         }
         
         function onConnected( event ){
@@ -247,9 +254,7 @@ class App{
         pos.y += 1;
         
 		let dir = new THREE.Vector3();
-        //Store original dolly rotation
         const quaternion = this.dolly.quaternion.clone();
-        //Get rotation for movement from the headset pose
         this.dolly.quaternion.copy( this.dummyCam.getWorldQuaternion(this.workingQuaternion) );
 		this.dolly.getWorldDirection(dir);
         dir.negate();
@@ -299,7 +304,6 @@ class App{
             this.dolly.position.copy( intersect[0].point );
         }
 
-        //Restore the original rotation
         this.dolly.quaternion.copy( quaternion );
 	}
 		
