@@ -146,7 +146,7 @@ class App{
                         guard.scale.set( 0.03, 0.03, 0.03 );
                         
                         // Rotate to face correct direction
-                        guard.rotation.y = Math.PI; // -180 degrees
+                        guard.rotation.y = Math.PI/2; // 180 degrees
                         
                         self.scene.add( guard );
                         console.log('Guard model loaded successfully');
