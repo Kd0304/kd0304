@@ -167,10 +167,10 @@ postLoader.load(
         const post = postGltf.scene;
         
         // Position the post - adjust these values as needed
-        post.position.set(6, 0, 5);
+        post.position.set(-6, 0, 8);
         
         // Scale the post - adjust if needed
-        post.scale.set(0.02, 0.02, 0.02);
+        post.scale.set(0.3, 0.3, 0.3);
         
         // Rotate the post if needed
         post.rotation.y = Math.PI/2;
