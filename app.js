@@ -156,6 +156,33 @@ class App{
                         console.error( 'Error loading guard model', error );
                     }
                 );
+		const postLoader = new GLTFLoader();
+postLoader.setDRACOLoader(dracoLoader);
+postLoader.load(
+    './models/post.glb', // Path to your second model
+    function(postGltf) {
+        const post = postGltf.scene;
+        
+        // Position the post - adjust these values as needed
+        post.position.set(-5, 0, 8);
+        
+        // Scale the post - adjust if needed
+        post.scale.set(0.02, 0.02, 0.02);
+        
+        // Rotate the post if needed
+        post.rotation.y = Math.PI/2;
+        
+        self.scene.add(post);
+        console.log('post model loaded');
+    },
+    undefined,
+    function(error) {
+        console.error('Error loading post model', error);
+    }
+);
+
+self.loadingBar.visible = false;
+self.setupXR();
                 
                 self.loadingBar.visible = false;
                 self.setupXR();
