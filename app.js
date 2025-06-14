@@ -1,45 +1,71 @@
-
 import * as THREE from './libs/three/three.module.js';
-import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';
-import { DRACOLoader } from './libs/three/jsm/DRACOLoader.js';
-import { RGBELoader } from './libs/three/jsm/RGBELoader.js';
+import { GLTFLoader } from './libs/three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from './libs/three/examples/jsm/loaders/DRACOLoader.js';
+import { RGBELoader } from './libs/three/examples/jsm/loaders/RGBELoader.js';
 import { Stats } from './libs/stats.module.js';
 import { LoadingBar } from './libs/LoadingBar.js';
 import { VRButton } from './libs/VRButton.js';
 import { CanvasUI } from './libs/CanvasUI.js';
 import { GazeController } from './libs/GazeController.js'
-import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFactory.js';
-import { GLTFLoader } from './libs/three/examples/jsm/loaders/GLTFLoader.js';
+import { XRControllerModelFactory } from './libs/three/examples/jsm/XRControllerModelFactory.js';
+
 
 class App{
 	constructor(){
-// Load a GLB model
-const loader = new GLTFLoader();
+		const container = document.createElement( 'div' );
+		document.body.appendChild( container );
+        
+        // Set a consistent assets path
+		this.assetsPath = './assets/';
+        
+        // Basic scene setup
+		this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.01, 500 );
+		this.camera.position.set( 0, 1.6, 0 );
+        
+        // Dolly for camera movement
+        this.dolly = new THREE.Object3D( );
+        this.dolly.position.set(0, 0, 10); // Start position for the college scene
+        this.dolly.add( this.camera );
+        this.dummyCam = new THREE.Object3D();
+        this.camera.add( this.dummyCam );
+        
+		this.scene = new THREE.Scene();
+        this.scene.add( this.dolly );
+        
+        // Lighting
+		const ambient = new THREE.HemisphereLight(0xFFFFFF, 0xAAAAAA, 0.8);
+		this.scene.add(ambient);
 
-loader.load(
-    // URL of your model
-    'assets/house.glb',
-    // Called when the resource is loaded
-    ( gltf ) => {
-        // Add the model to the scene
-        this.scene.add( gltf.scene );
-
-        // You can optionally adjust the model's position, rotation, and scale here
-        gltf.scene.position.set( 0, 0, -4 ); // Places the model 4 meters in front
-        // gltf.scene.rotation.y = Math.PI; // Rotates the model 180 degrees
-        // gltf.scene.scale.set( 0.5, 0.5, 0.5 ); // Makes the model half size
-    },
-    // Called while loading is progressing (optional)
-    ( xhr ) => {
-        console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-    },
-    // Called when loading has errors (optional)
-    ( error ) => {
-        console.log( 'An error happened while loading the model:', error );
-    }
-);
-
-
+        // Renderer setup
+		this.renderer = new THREE.WebGLRenderer({ antialias: true });
+		this.renderer.setPixelRatio( window.devicePixelRatio );
+		this.renderer.setSize( window.innerWidth, window.innerHeight );
+		this.renderer.outputEncoding = THREE.sRGBEncoding;
+		container.appendChild( this.renderer.domElement );
+        this.setEnvironment();
+	
+        window.addEventListener( 'resize', this.resize.bind(this) );
+        
+        // Utility variables
+        this.clock = new THREE.Clock();
+        this.up = new THREE.Vector3(0,1,0);
+        this.origin = new THREE.Vector3();
+        this.workingVec3 = new THREE.Vector3();
+        this.workingQuaternion = new THREE.Quaternion();
+        this.raycaster = new THREE.Raycaster();
+        
+        // Optional Stats display
+        this.stats = new Stats();
+		container.appendChild( this.stats.dom );
+        
+		this.loadingBar = new LoadingBar();
+		
+        // Load both models
+		this.loadCollege();
+        this.loadGuard(); // Load the new guard model
+        
+        this.immersive = false;
+	}
 	
     setEnvironment(){
         const loader = new RGBELoader().setDataType( THREE.UnsignedByteType );
@@ -64,19 +90,40 @@ loader.load(
         this.camera.updateProjectionMatrix();
         this.renderer.setSize( window.innerWidth, window.innerHeight );  
     }
+
+    loadGuard(){
+        const loader = new GLTFLoader( ).setPath(this.assetsPath);
+        const self = this;
+
+        // Load the guard.glb model
+        loader.load(
+            'guard.glb',
+            function ( gltf ) {
+                const guard = gltf.scene;
+                // Add the loaded model to the scene
+				self.scene.add( guard );
+                
+                // Position and scale the guard model as needed
+                guard.position.set(0, 0, 6); // Position it in the scene
+                guard.scale.set(1.5, 1.5, 1.5); // Make it a bit larger if needed
+			},
+			undefined, // We don't need a progress callback for this one
+			function ( error ) {
+				console.error( 'An error happened loading the guard model:', error );
+			}
+        );
+    }
     
 	loadCollege(){
-        
-		const loader = new GLTFLoader( ).setPath(this.assetsPath);
+        const loader = new GLTFLoader( ).setPath(this.assetsPath);
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath( './libs/three/js/draco/' );
         loader.setDRACOLoader( dracoLoader );
         
         const self = this;
 		
-		// Load a glTF resource
+		// Load the original college.glb model
 		loader.load(
-			// resource URL
 			'college.glb',
 			// called when the resource is loaded
 			function ( gltf ) {
@@ -84,6 +131,7 @@ loader.load(
                 const college = gltf.scene.children[0];
 				self.scene.add( college );
 				
+                // This code is specific to the college.glb model for collisions and materials
 				college.traverse(function (child) {
     				if (child.isMesh){
 						if (child.name.indexOf("PROXY")!=-1){
@@ -100,30 +148,18 @@ loader.load(
                         }
 					}
 				});
-                       
-                const door1 = college.getObjectByName("LobbyShop_Door__1_");
-                const door2 = college.getObjectByName("LobbyShop_Door__2_");
-                const pos = door1.position.clone().sub(door2.position).multiplyScalar(0.5).add(door2.position);
-                const obj = new THREE.Object3D();
-                obj.name = "LobbyShop";
-                obj.position.copy(pos);
-                college.add( obj );
                 
+                // Hide loading bar and set up XR after the main scene is loaded
                 self.loadingBar.visible = false;
-			
                 self.setupXR();
 			},
 			// called while loading is progressing
 			function ( xhr ) {
-
 				self.loadingBar.progress = (xhr.loaded / xhr.total);
-				
 			},
 			// called when loading has errors
 			function ( error ) {
-
-				console.log( 'An error happened' );
-
+				console.error( 'An error happened loading the college model:', error );
 			}
 		);
 	}
@@ -133,29 +169,12 @@ loader.load(
 
         const btn = new VRButton( this.renderer );
         
-        const self = this;
-        
-        const timeoutId = setTimeout( connectionTimeout, 2000 );
-        
         function onSelectStart( event ) {
-        
             this.userData.selectPressed = true;
-        
         }
 
         function onSelectEnd( event ) {
-        
             this.userData.selectPressed = false;
-        
-        }
-        
-        function onConnected( event ){
-            clearTimeout( timeoutId );
-        }
-        
-        function connectionTimeout(){
-            self.useGaze = true;
-            self.gazeController = new GazeController( self.scene, self.dummyCam );
         }
         
         this.controllers = this.buildControllers( this.dolly );
@@ -163,22 +182,7 @@ loader.load(
         this.controllers.forEach( ( controller ) =>{
             controller.addEventListener( 'selectstart', onSelectStart );
             controller.addEventListener( 'selectend', onSelectEnd );
-            controller.addEventListener( 'connected', onConnected );
         });
-        
-        const config = {
-            panelSize: { height: 0.5 },
-            height: 256,
-            name: { fontSize: 50, height: 70 },
-            info: { position:{ top: 70, backgroundColor: "#ccc", fontColor:"#000" } }
-        }
-        const content = {
-            name: "name",
-            info: "info"
-        }
-        
-        this.ui = new CanvasUI( content, config );
-        this.scene.add( this.ui.mesh );
         
         this.renderer.setAnimationLoop( this.render.bind(this) );
     }
@@ -276,51 +280,13 @@ loader.load(
     get selectPressed(){
         return ( this.controllers !== undefined && (this.controllers[0].userData.selectPressed || this.controllers[1].userData.selectPressed) );    
     }
-    
-    showInfoboard( name, info, pos ){
-        if (this.ui === undefined ) return;
-        this.ui.position.copy(pos).add( this.workingVec3.set( 0, 1.3, 0 ) );
-        const camPos = this.dummyCam.getWorldPosition( this.workingVec3 );
-        this.ui.updateElement( 'name', info.name );
-        this.ui.updateElement( 'info', info.info );
-        this.ui.update();
-        this.ui.lookAt( camPos )
-        this.ui.visible = true;
-        this.boardShown = name;
-    }
 
 	render( timestamp, frame ){
         const dt = this.clock.getDelta();
         
         if (this.renderer.xr.isPresenting){
-            let moveGaze = false;
-        
-            if ( this.useGaze && this.gazeController!==undefined){
-                this.gazeController.update();
-                moveGaze = (this.gazeController.mode == GazeController.Modes.MOVE);
-            }
-        
-            if (this.selectPressed || moveGaze){
+            if (this.selectPressed){
                 this.moveDolly(dt);
-                if (this.boardData){
-                    const scene = this.scene;
-                    const dollyPos = this.dolly.getWorldPosition( new THREE.Vector3() );
-                    let boardFound = false;
-                    Object.entries(this.boardData).forEach(([name, info]) => {
-                        const obj = scene.getObjectByName( name );
-                        if (obj !== undefined){
-                            const pos = obj.getWorldPosition( new THREE.Vector3() );
-                            if (dollyPos.distanceTo( pos ) < 3){
-                                boardFound = true;
-                                if ( this.boardShown !== name) this.showInfoboard( name, info, pos );
-                            }
-                        }
-                    });
-                    if (!boardFound){
-                        this.boardShown = "";
-                        this.ui.visible = false;
-                    }
-                }
             }
         }
         
