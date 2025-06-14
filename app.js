@@ -92,7 +92,6 @@ class App{
     }
     
 	loadCollege(){
-        
 		const loader = new GLTFLoader( ).setPath(this.assetsPath);
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath( './libs/three/js/draco/' );
@@ -100,11 +99,9 @@ class App{
         
         const self = this;
 		
-		// Load a glTF resource
+		// Load college model
 		loader.load(
-			// resource URL
 			'college.glb',
-			// called when the resource is loaded
 			function ( gltf ) {
 
                 const college = gltf.scene.children[0];
@@ -138,18 +135,25 @@ class App{
                 self.loadingBar.visible = false;
 			
                 self.setupXR();
-			},
-			// called while loading is progressing
+ 		const guardLoader = new GLTFLoader();
+                guardLoader.setDRACOLoader( dracoLoader ); // Reuse Draco loader
+                
+                guardLoader.load(
+                    './models/guard.glb',
+                    function( guardGltf ) {
+                        const guard = guardGltf.scene;
+                        // Position guard near entrance (adjust as needed)
+                        guard.position.set( 5, 0, -3 );
+                        guard.scale.set( 0.5, 0.5, 0.5 );
+                        self.scene.add( guard );
+                        
+                        console.log('Guard model loaded successfully');
+            	},
 			function ( xhr ) {
-
 				self.loadingBar.progress = (xhr.loaded / xhr.total);
-				
 			},
-			// called when loading has errors
 			function ( error ) {
-
 				console.log( 'An error happened' );
-
 			}
 		);
 	}
