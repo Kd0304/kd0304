@@ -146,7 +146,7 @@ class App{
                         guard.scale.set( 0.03, 0.03, 0.03 );
                         
                         // Rotate to face correct direction
-                        guard.rotation.y = Math.PI/2; // 180 degrees
+                        guard.rotation.y = Math.PI/-2; // 
                         
                         self.scene.add( guard );
                         console.log('Guard model loaded successfully');
@@ -156,15 +156,18 @@ class App{
                         console.error( 'Error loading guard model', error );
                     }
                 );
-		const postLoader = new GLTFLoader();
+
+// Load post model after college is ready
+const postLoader = new GLTFLoader();
 postLoader.setDRACOLoader(dracoLoader);
+
 postLoader.load(
     './models/post.glb', // Path to your second model
     function(postGltf) {
         const post = postGltf.scene;
         
         // Position the post - adjust these values as needed
-        post.position.set(-5, 0, 8);
+        post.position.set(6, 0, 5);
         
         // Scale the post - adjust if needed
         post.scale.set(0.02, 0.02, 0.02);
