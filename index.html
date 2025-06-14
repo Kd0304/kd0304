@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>VR Architectural Walkthrough with WebXR</title>
+    <title>VR Architectural Walkthrough with WebXR</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     
     <!-- Favicon Section -->
@@ -12,7 +12,6 @@
     <link rel="mask-icon" href="./css/favicon/safari-pinned-tab.svg" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
-    <!-- end favicon -->
     
     <!-- A-Frame Libraries -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
@@ -25,139 +24,368 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .header {
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            line-height: 1.6;
+        }
+        
+        .scene-container {
+            width: 100%;
+            height: 600px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
         #loading-screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #000;
-            color: #fff;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            transition: opacity 0.5s;
         }
-        .progress-bar {
-            width: 300px;
-            height: 20px;
-            border: 2px solid #fff;
+        
+        .progress-container {
+            width: 80%;
+            max-width: 400px;
             margin-top: 20px;
         }
+        
+        .progress-label {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
         .progress-fill {
             height: 100%;
             width: 0%;
-            background: #4CAF50;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
             transition: width 0.3s;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .controls button {
+            padding: 12px 25px;
+            font-size: 1rem;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+        
+        .scene-info {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            color: white;
+            max-width: 800px;
+        }
+        
+        .scene-info h3 {
+            margin-top: 0;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+            padding-bottom: 10px;
+        }
+        
+        .scene-info ul {
+            text-align: left;
+            padding-left: 20px;
+        }
+        
+        .scene-info li {
+            margin-bottom: 8px;
+        }
+        
+        .vr-button {
+            background: linear-gradient(135deg, #00c3ff, #ffff1c) !important;
+            font-weight: bold;
+            color: #1a2a6c !important;
+        }
+        
+        .vr-button:hover {
+            background: linear-gradient(135deg, #00a3df, #ffff00) !important;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        a-scene {
+            width: 100%;
+            height: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .scene-container {
+                height: 400px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="loading-screen">
-        <h2>Loading VR Experience</h2>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress"></div>
+    <div class="container">
+        <div class="header">
+            <h1>VR Architectural Walkthrough</h1>
+            <p>Explore our college campus in immersive VR with WebXR technology. This demo features the main college building and a security guard model placed at the entrance.</p>
+        </div>
+        
+        <div class="scene-container">
+            <div id="loading-screen">
+                <h2>Loading VR Experience</h2>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Initializing...</span>
+                        <span id="progress-text">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress"></div>
+                    </div>
+                </div>
+                <p>Loading models and environment...</p>
+            </div>
+            
+            <a-scene 
+                vr-mode-ui="enabled: true" 
+                renderer="colorManagement: true; antialias: true"
+                loading-screen="enabled: false"
+                xr-mode
+                embedded
+            >
+                <!-- Asset Preloading -->
+                <a-assets>
+                    <a-asset-item id="college-model" src="assets/college.glb"></a-asset-item>
+                    <a-asset-item id="guard-model" src="models/guard.glb"></a-asset-item>
+                </a-assets>
+
+                <!-- Main College Model -->
+                <a-entity
+                    id="college"
+                    gltf-model="#college-model"
+                    position="0 0 -10"
+                    scale="0.8 0.8 0.8"
+                    rotation="0 0 0"
+                    shadow="cast: true; receive: true"
+                ></a-entity>
+
+                <!-- Guard Model at Entrance -->
+                <a-entity
+                    id="guard"
+                    gltf-model="#guard-model"
+                    position="-3 0 -8"
+                    scale="0.7 0.7 0.7"
+                    rotation="0 90 0"
+                    shadow="cast: true; receive: true"
+                ></a-entity>
+
+                <!-- Player/Camera Rig -->
+                <a-entity id="player-rig" movement-controls="speed: 0.2" position="0 0 0">
+                    <a-entity 
+                        camera="active: true" 
+                        position="0 1.6 0"
+                        look-controls="pointerLockEnabled: true"
+                    ></a-entity>
+                    
+                    <!-- Laser Pointer for Interaction -->
+                    <a-entity 
+                        laser-controls="hand: right" 
+                        raycaster="objects: .clickable; far: 10"
+                    ></a-entity>
+                </a-entity>
+
+                <!-- Environment -->
+                <a-sky color="#87CEEB"></a-sky>
+                <a-entity light="type: ambient; intensity: 0.6"></a-entity>
+                <a-entity light="type: directional; intensity: 0.8; castShadow: true" position="-1 4 1"></a-entity>
+                
+                <!-- Ground Plane -->
+                <a-entity 
+                    geometry="primitive: plane; width: 50; height: 50" 
+                    rotation="-90 0 0" 
+                    position="0 0 0"
+                    material="color: #3d9970; metalness: 0.1; roughness: 0.8"
+                    shadow="receive: true"
+                ></a-entity>
+                
+                <!-- UI Elements -->
+                <a-entity class="ui-container">
+                    <a-text 
+                        value="College Campus" 
+                        position="0 2.2 -1.5" 
+                        color="#222" 
+                        align="center"
+                        scale="2 2 2"
+                    ></a-text>
+                </a-entity>
+            </a-scene>
+        </div>
+        
+        <div class="controls">
+            <button id="enter-vr" class="vr-button">Enter VR Mode</button>
+            <button id="reset-view">Reset View</button>
+            <button id="info-button">Scene Information</button>
+        </div>
+        
+        <div id="scene-info" class="scene-info hidden">
+            <h3>Scene Information</h3>
+            <p>This VR experience features two 3D models:</p>
+            <ul>
+                <li><strong>College Building</strong> - The main campus building located at the center of the scene</li>
+                <li><strong>Security Guard</strong> - Positioned at the entrance to welcome visitors</li>
+            </ul>
+            <p><strong>Controls:</strong></p>
+            <ul>
+                <li>WASD keys or gamepad thumbsticks to move around</li>
+                <li>Mouse or head movement to look around</li>
+                <li>Press 'Enter VR Mode' to experience in VR headset</li>
+                <li>Press 'Reset View' to return to starting position</li>
+            </ul>
         </div>
     </div>
 
-    <a-scene 
-        vr-mode-ui="enabled: true" 
-        renderer="colorManagement: true; antialias: true"
-        loading-screen="enabled: false"
-        xr-mode
-    >
-        <!-- Asset Preloading -->
-        <a-assets>
-            <a-asset-item id="guard-model" src="models/guard.glb"></a-asset-item>
-        </a-assets>
-
-        <!-- Main 3D Model -->
-        <a-entity
-            id="arch-model"
-            gltf-model="#guard-model"
-            position="0 0.5 -5"
-            scale="1 1 1"
-            rotation="0 0 0"
-            shadow="cast: true; receive: true"
-        ></a-entity>
-
-        <!-- Player/Camera Rig -->
-        <a-entity id="player-rig" movement-controls="speed: 0.2">
-            <a-entity 
-                camera="active: true" 
-                position="0 1.6 0"
-                look-controls="pointerLockEnabled: true"
-            ></a-entity>
-            
-            <!-- Laser Pointer for Interaction -->
-            <a-entity 
-                laser-controls="hand: right" 
-                raycaster="objects: .clickable; far: 10"
-            ></a-entity>
-        </a-entity>
-
-        <!-- Environment -->
-        <a-sky color="#ECECEC"></a-sky>
-        <a-entity light="type: ambient; intensity: 0.6"></a-entity>
-        <a-entity light="type: directional; intensity: 0.8; castShadow: true" position="-1 4 1"></a-entity>
-        
-        <!-- Ground Plane -->
-        <a-entity 
-            geometry="primitive: plane; width: 30; height: 30" 
-            rotation="-90 0 0" 
-            position="0 0 0"
-            material="color: #808080; metalness: 0.1; roughness: 0.8"
-            shadow="receive: true"
-        ></a-entity>
-        
-        <!-- UI Elements -->
-        <a-entity class="ui-container">
-            <a-text 
-                value="Architectural Walkthrough" 
-                position="0 2.2 -1.5" 
-                color="#222" 
-                align="center"
-                scale="2 2 2"
-            ></a-text>
-        </a-entity>
-    </a-scene>
-
-    <script src="./libs/fas.js"></script>
-	<script type="module">
-        import { App } from './app.js';
-        
+    <script>
+        // Initialize the VR experience
         document.addEventListener("DOMContentLoaded", function() {
-            // Get loading elements
+            // Get DOM elements
             const loadingScreen = document.getElementById('loading-screen');
             const progressBar = document.getElementById('progress');
-            
-            // Scene load handler
+            const progressText = document.getElementById('progress-text');
+            const enterVrBtn = document.getElementById('enter-vr');
+            const resetViewBtn = document.getElementById('reset-view');
+            const infoButton = document.getElementById('info-button');
+            const sceneInfo = document.getElementById('scene-info');
             const scene = document.querySelector('a-scene');
+            
+            // Model loading progress
+            let modelsLoaded = 0;
+            const totalModels = 2;
+            
+            // Initialize VR scene
             scene.addEventListener('loaded', function() {
-                // Model load handler
-                const model = document.querySelector('#arch-model');
-                model.addEventListener('model-loaded', () => {
-                    // Animate progress bar
-                    let progress = 0;
-                    const interval = setInterval(() => {
-                        progress += 5;
-                        progressBar.style.width = `${progress}%`;
-                        
-                        if (progress >= 100) {
-                            clearInterval(interval);
-                            loadingScreen.style.display = 'none';
-                            
-                            // Initialize your app
-                            const app = new App(scene);
-                            window.app = app;
-                        }
-                    }, 50);
+                // Track model loading
+                document.querySelector('#college').addEventListener('model-loaded', updateProgress);
+                document.querySelector('#guard').addEventListener('model-loaded', updateProgress);
+                
+                // Set up VR button
+                enterVrBtn.addEventListener('click', function() {
+                    const vrButton = document.querySelector('a-scene').components['vr-mode-ui'].enterVRButton;
+                    if (vrButton) {
+                        vrButton.click();
+                    } else {
+                        alert('VR mode not available. Please try on a VR-compatible device.');
+                    }
+                });
+                
+                // Reset view button
+                resetViewBtn.addEventListener('click', function() {
+                    const rig = document.querySelector('#player-rig');
+                    if (rig) {
+                        rig.setAttribute('position', '0 0 0');
+                        rig.setAttribute('rotation', '0 0 0');
+                        console.log('View reset to starting position');
+                    }
+                });
+                
+                // Info button
+                infoButton.addEventListener('click', function() {
+                    sceneInfo.classList.toggle('hidden');
                 });
             });
+            
+            // Update progress bar
+            function updateProgress() {
+                modelsLoaded++;
+                const progress = Math.min(100, Math.round((modelsLoaded / totalModels) * 100));
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${progress}%`;
+                
+                if (modelsLoaded === totalModels) {
+                    // Finalize loading
+                    setTimeout(() => {
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                        }, 500);
+                    }, 500);
+                }
+            }
+            
+            // Initialize loading with some progress
+            setTimeout(() => {
+                progressBar.style.width = '20%';
+                progressText.textContent = '20%';
+            }, 500);
         });
-	</script>
+    </script>
 </body>
 </html>
