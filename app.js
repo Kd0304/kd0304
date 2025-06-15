@@ -170,10 +170,10 @@ postLoader.load(
         post.position.set(-6, 0, 8);
         
         // Scale the post - adjust if needed
-        post.scale.set(0.3, 0.3, 0.3);
+        post.scale.set(0.1, 0.1, 0.1);
         
         // Rotate the post if needed
-        post.rotation.y = Math.PI/2;
+        post.rotation.y = Math.PI/4;
         
         self.scene.add(post);
         console.log('post model loaded');
